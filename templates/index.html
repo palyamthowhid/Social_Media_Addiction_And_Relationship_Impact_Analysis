@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div id="vanta-bg"></div>
     <div class="container">
@@ -14,9 +16,10 @@
         <p style="text-align: center; color: #64748b; margin-bottom: 2rem;">
             Predict your Mental Health Score & Addiction Risk based on usage habits.
         </p>
-        
+
         {% if error %}
-        <div style="background-color: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+        <div
+            style="background-color: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
             <strong>Error:</strong> {{ error }}
         </div>
         {% endif %}
@@ -28,7 +31,7 @@
                     <label>Age</label>
                     <input type="number" name="Age" min="10" max="100" required placeholder="e.g., 21">
                 </div>
-                
+
                 <div class="form-group">
                     <label>Gender</label>
                     <select name="Gender">
@@ -65,7 +68,9 @@
                 <!-- Habits -->
                 <div class="form-group">
                     <label>Avg Daily Usage (Hours)</label>
-                    <input type="number" name="Avg_Daily_Usage_Hours" step="0.1" required placeholder="e.g., 4.5">
+                    <input type="number" name="Avg_Daily_Usage_Hours" step="0.1" min="0" max="24" required
+                        placeholder="e.g., 4.5"
+                        oninput="this.setCustomValidity(this.value > 24 ? 'There are only 24 hours in a day!' : '')">
                 </div>
 
                 <div class="form-group">
@@ -84,7 +89,9 @@
 
                 <div class="form-group">
                     <label>Sleep Hours / Night</label>
-                    <input type="number" name="Sleep_Hours_Per_Night" step="0.5" required placeholder="e.g., 7.0">
+                    <input type="number" name="Sleep_Hours_Per_Night" step="0.5" min="0" max="24" required
+                        placeholder="e.g., 7.0"
+                        oninput="this.setCustomValidity(this.value > 24 ? 'You cannot sleep more than 24 hours in a day!' : '')">
                 </div>
 
                 <div class="form-group">
@@ -111,12 +118,14 @@
                     <label>Conflicts via Social Media</label>
                     <input type="number" name="Conflicts_Over_Social_Media" required placeholder="Count (e.g., 2)">
                 </div>
-                
+
                 <div class="form-group" style="grid-column: span 1 / -1;">
                     <label>Self-Perceived Addiction (1-10)</label>
-                    <input type="range" name="Self_Perceived_Addiction" min="1" max="10" value="5" oninput="this.nextElementSibling.value = this.value">
+                    <input type="range" name="Self_Perceived_Addiction" min="1" max="10" value="5"
+                        oninput="this.nextElementSibling.value = this.value">
                     <output>5</output>
-                    <small style="display:block; color: #94a3b8; font-weight: 400;">Subjective score used for calibration</small>
+                    <small style="display:block; color: #94a3b8; font-weight: 400;">Subjective score used for
+                        calibration</small>
                 </div>
             </div>
 
@@ -140,7 +149,7 @@
             amplitudeFactor: 1.5,
             size: 1.5
         });
-        
+
         VanillaTilt.init(document.querySelector(".container"), {
             max: 5,
             speed: 400,
@@ -150,4 +159,5 @@
         });
     </script>
 </body>
+
 </html>
