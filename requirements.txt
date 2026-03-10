@@ -1,4 +1,6 @@
 flask
+gunicorn
+packaging
 joblib
 pandas
 numpy
