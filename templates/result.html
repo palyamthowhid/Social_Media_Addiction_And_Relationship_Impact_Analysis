@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="dashboard-container">
+
+        <div class="dashboard-header" data-tilt>
+            <h1>Your Analysis Dashboard</h1>
+            <a href="/" class="back-link">← Analyze Another Profile</a>
+        </div>
+
+        <div class="dashboard-grid">
+
+            <!-- Mental Health Score Card -->
+            <div class="dashboard-card" data-tilt>
+                <h3>Mental Health Score</h3>
+                <div class="score-display">{{ result.mental_health_score }} <span
+                        style="font-size: 1.5rem; color: #94a3b8;">/ 10</span></div>
+                <p style="color: var(--text-light); font-size: 0.9rem;">Higher scores indicate better mental well-being.
+                </p>
+            </div>
+
+            <!-- Addiction Risk Card -->
+            <div class="dashboard-card" data-tilt>
+                <h3>Addiction Risk Assessment</h3>
+                <span class="risk-badge {{ 'risk-high' if result.addiction_risk == 'High' else 'risk-low' }}"
+                    style="margin-top: 1rem;">
+                    {{ result.addiction_risk }} Risk
+                </span>
+
+                <div style="width: 150px; height: 150px; margin-top: 1rem;">
+                    <canvas id="addictionDoughnut"></canvas>
+                </div>
+            </div>
+
+            <!-- User Profile Summary Card -->
+            <div class="dashboard-card" data-tilt>
+                <h3>Your Profile Summary</h3>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        Platform
+                        <span class="stat-value">{{ result.user_data.Most_Used_Platform if result.user_data else 'N/A'
+                            }}</span>
+                    </div>
+                    <div class="stat-item">
+                        Daily Usage
+                        <span class="stat-value">{{ result.user_data.Avg_Daily_Usage_Hours if result.user_data else
+                            'N/A' }} hrs</span>
+                    </div>
+                    <div class="stat-item">
+                        Sleep
+                        <span class="stat-value">{{ result.user_data.Sleep_Hours_Per_Night if result.user_data else
+                            'N/A' }} hrs</span>
+                    </div>
+                    <div class="stat-item">
+                        Conflicts
+                        <span class="stat-value">{{ result.user_data.Conflicts_Over_Social_Media if result.user_data
+                            else 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Population Comparison Chart -->
+            <div class="dashboard-card full-width" data-tilt>
+                <h3>Population Comparison</h3>
+                <div style="margin: 1rem 0; width: 100%; height: 300px;">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('comparisonChart').getContext('2d');
+        const userScore = {{ result.mental_health_score if result.mental_health_score is not none else 0 }};
+        let populationData = {{ result.population_distribution | tojson }};
+        // make sure we have at least 10 bins (fill zeros if missing)
+        if (!Array.isArray(populationData) || populationData.length < 10) {
+            populationData = Array(10).fill(0);
+        }
+
+        // Highlight logic: Find which bin the user falls into (buckets 1-10)
+        // Score is 1.0 - 10.0.
+        // Bins indices are 0-9 corresponding to scores 1-10.
+
+        const backgroundColors = populationData.map((_, index) => {
+            // Index 0 represents Score 1. Index 9 represents Score 10.
+            // Check if userScore (e.g. 7.2) is close to (index + 1)
+            const binValue = index + 1;
+            return Math.abs(userScore - binValue) < 0.6 ? '#6366f1' : 'rgba(209, 213, 219, 0.5)';
+        });
+
+        if (typeof Chart !== 'undefined') {
+            try {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                        datasets: [{
+                            label: 'Number of Students',
+                            data: populationData,
+                            backgroundColor: backgroundColors,
+                            borderRadius: 8,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: {
+                                display: true,
+                                text: 'Where You Stand (Population Distribution)',
+                                font: { family: 'Outfit', size: 16, weight: '600' },
+                                color: '#64748b'
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { display: false },
+                                display: false
+                            },
+                            x: {
+                                grid: { display: false },
+                                title: { display: true, text: 'Mental Health Score (Higher is Better)' }
+                            }
+                        },
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeOutQuart'
+                        }
+                    },
+                    plugins: [{
+                        id: 'text',
+                        afterDatasetsDraw(chart, args, pluginOptions) {
+                            const { ctx, chartArea: { top, bottom, left, right, width, height }, scales: { x, y } } = chart;
+                            // pixel value corresponds directly to the numeric score because our labels are "1".."10"
+                            const xVal = x.getPixelForValue(userScore);
+
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.moveTo(xVal, top);
+                            ctx.lineTo(xVal, bottom);
+                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = '#ec4899'; // Secondary color
+                            ctx.setLineDash([5, 5]);
+                            ctx.stroke();
+                            ctx.restore();
+
+                            // Label "YOU"
+                            ctx.save();
+                            ctx.fillStyle = '#ec4899';
+                            ctx.font = 'bold 12px Outfit';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('YOU', xVal, top - 10);
+                            ctx.restore();
+                        }
+                    }]
+                });
+
+                // Addiction Doughnut Chart
+                const doughnutCtx = document.getElementById('addictionDoughnut').getContext('2d');
+                const riskProb = {{ result.addiction_probability if result.addiction_probability is not none else 0 }};
+            const riskColor = riskProb > 50 ? '#ef4444' : '#10b981'; // Red for high, Green for low
+
+            new Chart(doughnutCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Probability', 'Safe'],
+                    datasets: [{
+                        data: [riskProb, 100 - riskProb],
+                        backgroundColor: [riskColor, 'rgba(209, 213, 219, 0.3)'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true,
+                        duration: 2000,
+                        easing: 'easeOutBounce'
+                    }
+                },
+                plugins: [{
+                    id: 'textCenter',
+                    beforeDraw: function (chart) {
+                        var width = chart.width,
+                            height = chart.height,
+                            ctx = chart.ctx;
+
+                        ctx.restore();
+                        var fontSize = (height / 80).toFixed(2);
+                        ctx.font = "bold " + fontSize + "em Outfit";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = riskColor;
+
+                        var text = riskProb + "%",
+                            textX = Math.round((width - ctx.measureText(text).width) / 2),
+                            textY = height / 2;
+
+                        ctx.fillText(text, textX, textY);
+                        ctx.save();
+                    }
+                }]
+            });
+
+        } catch (error) {
+            console.error('Error creating chart:', error);
+            // Fallback: display a message
+            ctx.fillStyle = '#64748b';
+            ctx.font = '16px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText('Chart could not be loaded.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        }
+        } else {
+            console.warn('Chart.js not loaded. Chart will not be displayed.');
+            // Fallback: display a message
+            ctx.fillStyle = '#64748b';
+            ctx.font = '16px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText('Chart library not available.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.halo.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <script>
+        VANTA.HALO({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            baseColor: 0x6366f1,
+            backgroundColor: 0x0f172a,
+            amplitudeFactor: 1.5,
+            size: 1.5
+        });
+
+        VanillaTilt.init(document.querySelectorAll("[data-tilt]"), {
+            max: 5,
+            speed: 400,
+            glare: true,
+            "max-glare": 0.15,
+            gyroscope: true
+        });
+    </script>
+</body>
+
+</html>

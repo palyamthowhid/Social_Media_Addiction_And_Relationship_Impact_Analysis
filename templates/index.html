@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Impact Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="vanta-bg"></div>
+    <div class="container">
+        <h1>Social Media Analyzer</h1>
+        <p style="text-align: center; color: #64748b; margin-bottom: 2rem;">
+            Predict your Mental Health Score & Addiction Risk based on usage habits.
+        </p>
+        
+        {% if error %}
+        <div style="background-color: #fee2e2; color: #ef4444; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="/predict" method="POST">
+            <div class="form-grid">
+                <!-- Demographics -->
+                <div class="form-group">
+                    <label>Age</label>
+                    <input type="number" name="Age" min="10" max="100" required placeholder="e.g., 21">
+                </div>
+                
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select name="Gender">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Non-binary">Non-binary</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Country</label>
+                    <select name="Country">
+                        <!-- Top countries from dataset -->
+                        <option value="India">India</option>
+                        <option value="USA">USA</option>
+                        <option value="UK">UK</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Palestine">Palestine</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Academic Level</label>
+                    <select name="Academic_Level">
+                        <option value="Undergraduate">Undergraduate</option>
+                        <option value="Graduate">Graduate</option>
+                        <option value="High School">High School</option>
+                        <option value="PhD">PhD</option>
+                    </select>
+                </div>
+
+                <!-- Habits -->
+                <div class="form-group">
+                    <label>Avg Daily Usage (Hours)</label>
+                    <input type="number" name="Avg_Daily_Usage_Hours" step="0.1" required placeholder="e.g., 4.5">
+                </div>
+
+                <div class="form-group">
+                    <label>Platform Used Most</label>
+                    <select name="Most_Used_Platform">
+                        <option value="Instagram">Instagram</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="Twitter">Twitter</option>
+                        <option value="Snapchat">Snapchat</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="YouTube">YouTube</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Sleep Hours / Night</label>
+                    <input type="number" name="Sleep_Hours_Per_Night" step="0.5" required placeholder="e.g., 7.0">
+                </div>
+
+                <div class="form-group">
+                    <label>Relationship Status</label>
+                    <select name="Relationship_Status">
+                        <option value="Single">Single</option>
+                        <option value="In Relationship">In Relationship</option>
+                        <option value="Married">Married</option>
+                        <option value="Complicated">Complicated</option>
+                    </select>
+                </div>
+
+                <!-- Impacts -->
+                <div class="form-group">
+                    <label>Impacts Academics?</label>
+                    <select name="Affects_Academic_Performance">
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                        <option value="Maybe">Maybe</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Conflicts via Social Media</label>
+                    <input type="number" name="Conflicts_Over_Social_Media" required placeholder="Count (e.g., 2)">
+                </div>
+                
+                <div class="form-group" style="grid-column: span 1 / -1;">
+                    <label>Self-Perceived Addiction (1-10)</label>
+                    <input type="range" name="Self_Perceived_Addiction" min="1" max="10" value="5" oninput="this.nextElementSibling.value = this.value">
+                    <output>5</output>
+                    <small style="display:block; color: #94a3b8; font-weight: 400;">Subjective score used for calibration</small>
+                </div>
+            </div>
+
+            <button type="submit">Analyze My Profile</button>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.halo.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <script>
+        VANTA.HALO({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            baseColor: 0x6366f1,
+            backgroundColor: 0x0f172a,
+            amplitudeFactor: 1.5,
+            size: 1.5
+        });
+        
+        VanillaTilt.init(document.querySelector(".container"), {
+            max: 5,
+            speed: 400,
+            glare: true,
+            "max-glare": 0.1,
+            gyroscope: true
+        });
+    </script>
+</body>
+</html>
